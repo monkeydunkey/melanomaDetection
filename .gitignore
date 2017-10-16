@@ -2,3 +2,5 @@ Data/
 AugData/
 BottleneckData/
 augmentedDataLabels.json
+.DS_Store
+.ipynb_checkpoints/
