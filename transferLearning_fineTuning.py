@@ -19,7 +19,7 @@ batch_size = 25
 # build the VGG16 network
 input = Input(shape=(img_width, img_height, 3),name = 'image_input')
 model = applications.VGG16(weights='imagenet', include_top=False, input_tensor = input)
-print('Model loaded.')
+print('Model loaded.', model.output_shape[1:])
 
 # build a classifier model to put on top of the convolutional model
 top_model = Sequential()
@@ -35,7 +35,7 @@ top_model.load_weights(top_model_weights_path)
 
 # add the model on top of the convolutional base
 #model.add(top_model)
-mdl = Model(inputs= model.input, outputs= top_model(model.output))
+mdl = Model(input= model.input, output= top_model(model.output))
 
 # set the first 25 layers (up to the last conv block)
 # to non-trainable (weights will not be updated)
