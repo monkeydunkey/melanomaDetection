@@ -1,11 +1,11 @@
 from keras import applications
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.layers import Input, Dropout, Flatten, Dense
 
 # path to the model weights files.
-top_model_weights_path = 'fc_model.h5'
+top_model_weights_path = 'bottleneck_fc_model.h5'
 # dimensions of our images.
 img_width, img_height = 150, 150
 
@@ -17,14 +17,13 @@ epochs = 50
 batch_size = 25
 
 # build the VGG16 network
-model = applications.VGG16(weights='imagenet', include_top=False)
+input = Input(shape=(img_width, img_height, 3),name = 'image_input')
+model = applications.VGG16(weights='imagenet', include_top=False, input_tensor = input)
 print('Model loaded.')
 
-input = Input(shape=(img_width, img_height, 3),name = 'image_input')
-mdl_output = model(input)
 # build a classifier model to put on top of the convolutional model
 top_model = Sequential()
-top_model.add(Flatten(mdl_output))
+top_model.add(Flatten(input_shape=model.output_shape[1:]))
 top_model.add(Dense(256, activation='relu'))
 top_model.add(Dropout(0.5))
 top_model.add(Dense(1, activation='sigmoid'))
@@ -35,7 +34,8 @@ top_model.add(Dense(1, activation='sigmoid'))
 top_model.load_weights(top_model_weights_path)
 
 # add the model on top of the convolutional base
-model.add(top_model)
+#model.add(top_model)
+mdl = Model(inputs= model.input, outputs= top_model(model.output))
 
 # set the first 25 layers (up to the last conv block)
 # to non-trainable (weights will not be updated)
