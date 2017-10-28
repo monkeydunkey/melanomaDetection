@@ -17,7 +17,7 @@ epochs = 50
 batch_size = 25
 
 # build the VGG16 network
-input = Input(shape=(img_width, img_height, 3),name = 'image_input')
+input = Input(shape=(3, img_width, img_height),name = 'image_input')
 model = applications.VGG16(weights='imagenet', include_top=False, input_tensor = input)
 print('Model loaded.', model.output_shape[1:])
 
@@ -44,7 +44,7 @@ for layer in model.layers[:25]:
 
 # compile the model with a SGD/momentum optimizer
 # and a very slow learning rate.
-model.compile(loss='binary_crossentropy',
+mdl.compile(loss='binary_crossentropy',
               optimizer=optimizers.SGD(lr=1e-4, momentum=0.9),
               metrics=['accuracy'])
 
@@ -70,7 +70,7 @@ validation_generator = test_datagen.flow_from_directory(
     class_mode='binary')
 
 # fine-tune the model
-model.fit_generator(
+mdl.fit_generator(
     train_generator,
     samples_per_epoch=nb_train_samples,
     nb_epoch=epochs,
