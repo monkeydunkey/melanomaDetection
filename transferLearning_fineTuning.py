@@ -13,12 +13,12 @@ top_model_weights_path = 'bottleneck_fc_model.h5'
 # dimensions of our images.
 img_width, img_height = 150, 150
 
-train_data_dir = 'Data/train'
-validation_data_dir = 'Data/val'
-nb_train_samples = 1800
-nb_validation_samples = 200
+train_data_dir = 'Data/train_sam'
+validation_data_dir = 'Data/val_sam'
+nb_train_samples = 24 #1800
+nb_validation_samples = 24 #200
 epochs = 10
-batch_size = 25
+batch_size = 12 #25
 
 class auc_roc_callback(keras.callbacks.Callback):
     def __init__(self, val_data_generator, val_labels):
@@ -33,7 +33,7 @@ class auc_roc_callback(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         y_pred = self.model.predict_generator(self.val_data_generator, self.val_samples)
         self.auc_history.append(roc_auc_score(self.val_labels, y_pred))
-        print 'AUC Score', self.auc_history[-1]
+        print '\n AUC Score:: ', self.auc_history[-1]
         return
 
     def on_batch_begin(self, batch, logs={}):
@@ -77,10 +77,10 @@ mdl.compile(loss='binary_crossentropy',
 
 # prepare data augmentation configuration
 train_datagen = ImageDataGenerator(
-    rescale=1. / 255,
-    shear_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True)
+    rescale=1. / 255)
+    #shear_range=0.2,
+    #zoom_range=0.2,
+    #horizontal_flip=True)
 
 test_datagen = ImageDataGenerator(rescale=1. / 255)
 
@@ -94,8 +94,7 @@ validation_generator = test_datagen.flow_from_directory(
     validation_data_dir,
     target_size=(img_height, img_width),
     batch_size=batch_size,
-    class_mode='binary',
-    shuffle=False)
+    class_mode='binary')
 
 
 #Creating the callbacks
@@ -107,9 +106,12 @@ val_generator = val_datagen.flow_from_directory(
     class_mode='binary',
     shuffle=False)
 
-val_labels = np.array([0]*2 + [1]*1)
+val_labels = np.array([0]*20 + [1]*4)#np.array([0]*167 + [1]*33)
 checkpointer = ModelCheckpoint(filepath="trainedmodel/weights.hdf5", verbose=1, save_best_only=True)
 auc_roc_hist = auc_roc_callback(val_generator, val_labels)
+
+class_weight = {0 : 1.,
+    1: 6.}
 
 # fine-tune the model
 mdl.fit_generator(
@@ -118,5 +120,6 @@ mdl.fit_generator(
     nb_epoch=epochs,
     validation_data=validation_generator,
     nb_val_samples=nb_validation_samples,
-    callbacks=[auc_roc_hist, checkpointer])
+    callbacks=[auc_roc_hist, checkpointer],
+    class_weight = class_weight)
 print 'AUC Scores are', auc_roc_hist.auc_history
